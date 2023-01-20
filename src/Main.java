@@ -10,29 +10,54 @@ import static java.awt.Color.HSBtoRGB;
 public class Main {
     final static Random rand = new Random();
 
-    public static void main(String[] args) throws IOException {
-        makeVoranoi();
+    /**
+     * Commandline arguments are read in as follows
+     * Java Voranoi [image width] [image height] [cells wide] [cells high]
+     * + image width    | How wide in pixels the output image will be
+     * + image height   | How tall the image will be in pixels
+     * + cells wide     | How many cells to fit width wise in relation to image width
+     * + cells high     | How many cells to fit height wise in relation to image height
+     * @param args Commandline arguments
+     */
+    public static void main(String[] args) {
+        // no command line arguments = default
+        if (args.length == 0) {
+            makeVoranoi(1000, 500, 5, 250);
+        } else if (args.length == 4) {
+            makeVoranoi(
+                    Integer.parseInt(args[0]),
+                    Integer.parseInt(args[1]),
+                    Integer.parseInt(args[2]),
+                    Integer.parseInt(args[3])
+            );
+        } else {
+            System.out.println(
+                    """
+                            Incorrect usage, correct usage:
+                            Java Voranoi [image width] [image height] [cells wide] [cells high]
+                            \timage width    | How wide in pixels the output image will be
+                            \timage height   | How tall the image will be in pixels
+                            \tcells wide     | How many cells to fit width wise in relation to image width
+                            \tcells high     | How many cells to fit height wise in relation to image height"""
+            );
+            System.exit(-1);
+        }
     }
 
-    private static void makeVoranoi() throws IOException {
-        final int width = 400;
-        final int height = 300;
-
-        final int cellsW = 10;
-        final int cellsH = 10;
+    private static void makeVoranoi(final int width, final int height, final int cellsW, final int cellsH) {
         final int cellPixelW = width / cellsW;
         final int cellPixelH = height / cellsH;
 
+        // Holds Point objects temporarily
         Point p;
 
         // Create the point map
-        Point pointMap[][] = generateEmptyPointMap(cellsW, cellsH, cellPixelW, cellPixelH);
+        Point[][] pointMap = generatePointMap(cellsW, cellsH, cellPixelW, cellPixelH);
 
-        // Create black filled image
+        // Create blank image
         BufferedImage image = new BufferedImage(width, height, TYPE_INT_RGB);
 
-        // cover every pixel
-        int mapX, mapY;
+        // Set every pixel
         for (int imageX = 0; imageX < width; imageX++) {
             for (int imageY = 0; imageY < height; imageY++) {
                 // Get the closest point to the image x and y
@@ -44,12 +69,16 @@ public class Main {
         }
 
         // Write the image to a file
-        File outputfile = new File("saved.png");
-        ImageIO.write(image, "png", outputfile);
+        File outputfile = new File("output.png");
+        try {
+            ImageIO.write(image, "png", outputfile);
+        } catch (IOException e) {
+            System.out.println("There was an error processing the file!");
+        }
     }
 
-    private static Point[][] generateEmptyPointMap(int cellsW, int cellsH, int cellPixelW, int cellPixelH) {
-        Point pointMap[][] = new Point[cellsW][cellsH];
+    private static Point[][] generatePointMap(int cellsW, int cellsH, int cellPixelW, int cellPixelH) {
+        Point[][] pointMap = new Point[cellsW][cellsH];
         int pX, pY, pC;
 
         for (int cellX = 0; cellX < cellsW; cellX++) {
